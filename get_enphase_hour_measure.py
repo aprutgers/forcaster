@@ -44,13 +44,14 @@ def get_enphase_data():
 
    # 1. get valid web token
    enphase_token = get_enphase_web_token()
-   log.logdebug("enphase_token: " + enphase_token)
+   #log.logdebug("enphase_token: " + enphase_token)
 
    # 2. get measurement
    #curl -f -k -H 'Accept: application/json' -H 'Authorization: Bearer <token code>’ -X <API command>
    bearer   = 'Bearer ' + enphase_token
    headers  = {"Authorization": bearer}
    url      = 'https://192.168.2.1/ivp/pdm/energy'
+   requests.packages.urllib3.disable_warnings() 
    response = requests.get(url, headers=headers,verify=False)
    RD = json.loads(response.text)
    log.logdebug(RD)
