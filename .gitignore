@@ -1,6 +1,4 @@
 .env
 .cached_enphase_web_token
-do_enphase_api_call.sh
-create_enphase_token.sh
 solar3p.py
 __pycache__
