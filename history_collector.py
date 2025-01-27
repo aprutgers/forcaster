@@ -48,7 +48,7 @@ def get_day_hour_forcast(location,now):
    curr_day   = now.day
    curr_hour  = now.hour
    # cet format: DD-MM-YYYY HH:MM
-   curr_cet   = '%02d-%02d-%4d %s:00'%(curr_day,curr_month,curr_year,curr_hour)
+   curr_cet   = '%02d-%02d-%4d %02d:00'%(curr_day,curr_month,curr_year,curr_hour)
    
    forcast=load_meteo_forcast_data(location)
    # get the forcast for the day and hour - linear search
@@ -150,6 +150,7 @@ def main():
    meteo_prediction = get_day_hour_forcast(location,past_0hour)
    gr_w=0
    tc=0
+   cet=""
    try:
       cet=meteo_prediction['cet']
       gr_w=meteo_prediction['gr_w']
