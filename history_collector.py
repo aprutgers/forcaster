@@ -14,21 +14,21 @@ import solar3p
 #`hour` DECIMAL(2,0) NOT NULL,
 #`gr_w` DECIMAL(10,5) NOT NULL,
 #`tc` DECIMAL(10,5) NOT NULL,
-#`kwh_pv` DECIMAL(10,5) NOT NULL,
-#`kwh_s3p` DECIMAL(10,5) NOT NULL,
-#`kwh_return` DECIMAL(10,5) NOT NULL, (power returned to the network)
+#`wh_pv` DECIMAL(10,5) NOT NULL,
+#`wh_s3p` DECIMAL(10,5) NOT NULL,
+#`wh_return` DECIMAL(10,5) NOT NULL, (power returned to the network)
 #
 
 # insert_hour_pvhistory 
-def insert_hour_pvhistory(conn,now,gr_w,tc,kwh_pv,kwh_s3p,kwh_return):
+def insert_hour_pvhistory(conn,now,gr_w,tc,wh_pv,wh_s3p,wh_return):
    curr_year  = now.year
    curr_month = now.month
    curr_day   = now.day
    curr_hour  = now.hour
    mycursor = conn.cursor()
-   sql = 'insert into pvhistory(year,month,day,hour,gr_w,tc,kwh_pv,kwh_s3p,kwh_return) ' +\
+   sql = 'insert into pvhistory(year,month,day,hour,gr_w,tc,wh_pv,wh_s3p,wh_return) ' +\
          'values (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
-   mycursor.execute(sql,(curr_year,curr_month,curr_day,curr_hour,gr_w,tc,kwh_pv,kwh_s3p,kwh_return))
+   mycursor.execute(sql,(curr_year,curr_month,curr_day,curr_hour,gr_w,tc,wh_pv,wh_s3p,wh_return))
    conn.commit();
    log.loginfo(str(mycursor.rowcount) + " record inserted.")
    return mycursor.rowcount
@@ -125,7 +125,7 @@ def get_pv_watt_returned(conn,now):
    log.loginfo(records)
    log.logdebug(str(cursor.rowcount) + " record found.")
    if (cursor.rowcount>0):
-      return records[0][0] # should be one record
+      return 1000*records[0][0] # should be one record, convert kw to watt
    else:
       log.logerror("no records found for specified year:%s/month:%s/day:%s/hour:%s"%(curr_year,curr_month,curr_day,curr_hour))
       return 0;
@@ -161,7 +161,7 @@ def main():
       log.logerror("using gr_w=0 and tc=0")
 
 
-   # 3. get actual pv generated power for day/hour
+   # 3. get actual pv generated power in watt for day/hour
    past_0hour_wattHoursToday=get_pv_production(conn,past_0hour)
    log.loginfo("past 0hour wattHoursToday: " + str(past_0hour_wattHoursToday))
    past_1hour_wattHoursToday=get_pv_production(conn,past_1hour)
@@ -171,15 +171,15 @@ def main():
    if (delta_wattHoursToday<0):
       delta_wattHoursToday=0
 
-   # 4. get solar3p forcast for past hour
-   solar3p_forcast_in_kw=int(get_solar3p_forcast(past_0hour)*1000)
-   log.logdebug("solar3p_forcast_in_kw="+str(solar3p_forcast_in_kw))
+   # 4. get solar3p forcast in watt for past hour
+   solar3p_forcast_in_watt=int(get_solar3p_forcast(past_0hour)*1000)
+   log.logdebug("solar3p_forcast_in_watt="+str(solar3p_forcast_in_watt))
 
    # 5. get the power returned to the grid which should be a % of the delta_wattHoursToday
    wattRetunedInHour = get_pv_watt_returned(conn,past_0hour)
    log.logdebug("wattRetunedInHour="+str(wattRetunedInHour))
 
    # 6. insert record in pvhistory
-   insert_hour_pvhistory(conn,past_0hour,gr_w,tc,str(delta_wattHoursToday),str(solar3p_forcast_in_kw),str(wattRetunedInHour))
+   insert_hour_pvhistory(conn,past_0hour,gr_w,tc,str(delta_wattHoursToday),str(solar3p_forcast_in_watt),str(wattRetunedInHour))
 
 main()
