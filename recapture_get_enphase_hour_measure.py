@@ -85,7 +85,7 @@ def main():
 
    # 0. retrieve error data recovery file
    recover_data={}
-   with open('/tmp/reload_enphase.json') as f:
+   with open('./reload_enphase.json') as f:
       recover_data = json.load(f)
    for RD in recover_data['data']:
       #print(RD)
