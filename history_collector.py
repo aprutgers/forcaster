@@ -5,6 +5,8 @@ import datetime
 import json
 import log
 import math
+# solar3p module is in another path
+sys.path.append("/home/ec2-user/solar3p/")
 import solar3p
 
 #
@@ -92,7 +94,7 @@ def get_solar3p_forcast(now):
    d_period="day" # default prediction period meteo (current + 4 days)
    d_pans=12       # default number of panels
    d_wp=405        # default watt power of each panel
-   d_lay="SE"      # default orientation in geo direction N,NE,O,SE,S,SW,W,NW
+   d_lay="SW"      # default orientation in geo direction N,NE,O,SE,S,SW,W,NW
    d_gran="hour"    # granulairity per hour
    d_file="rotterdam" # default name of data file
    try:

@@ -1,45 +1,14 @@
 import os
 import sys
 import mysql.connector
-import datetime
+from datetime import datetime
 import requests
 import json
 import log
 import math
 from dotenv import load_dotenv
 
-def get_enphase_web_token():
-
-   cache_file="/home/ec2-user/forcaster/.cached_enphase_web_token"
-   if os.path.exists(cache_file):
-      log.logdebug("cached token exists - reusing")
-      f=open(cache_file,"r")
-      token=f.read()
-      f.close()
-      return token.rstrip('\n')
-
-   # get credentials from .env
-   load_dotenv()
-   user = os.environ.get('ENVOY_USER')
-   password = os.environ.get('ENVOY_PASSWORD')
-   envoy_serial = os.environ.get('ENVOY_SERIAL')
-   log.logdebug('user='+user)
-   log.logdebug('envoy_serial='+envoy_serial)
-
-   data = {'user[email]': user, 'user[password]': password}   
-   response = requests.post('https://enlighten.enphaseenergy.com/login/login.json?', data=data) 
-   response_data = json.loads(response.text)   
-   log.logdebug(response_data)
-   data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': user}   
-   response = requests.post('https://entrez.enphaseenergy.com/tokens', json=data)   
-   token = response.text
-
-   f=open(cache_file,"w")
-   f.write(token)
-   f.close()
-   
-   return token
-
+# recapture - fetch data from an error recovery .json and insert
 def get_enphase_data():
 
    # 1. get valid web token
@@ -100,22 +69,33 @@ def main():
 
    log.logdebug("main")
 
-   # 0. get current day, hour, minute 
-   now = datetime.datetime.now()
-   curr_year  = now.year
-   curr_month = now.month
-   curr_day   = now.day
-   curr_hour  = now.hour
-   curr_min   = now.minute
+   # recovery period
+   # start date = 2025-03-05 00:00
+   # end date   = 2025-03-05 20:00
 
-   #curr_day   = '%02d-%02d-%4d'%(curr_day,curr_month,curr_year,curr_hour,curr_min)
-   #curr_cet   = '%02d-%02d-%4d %2d:$2d'%(curr_day,curr_month,curr_year,curr_hour,curr_min)
+   date_string = "2025-03-05 00:00"
+   sdate = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
+   curr_year  = sdate.year
+   curr_month = sdate.month
+   curr_day   = sdate.day
+   curr_hour  = sdate.hour
+   curr_min   = sdate.minute
+   print(curr_year);
 
-   # 1. get enphase measure data for the hour from EnPhase API with valid web_token
-   (wattHoursToday,wattHoursSevenDays,wattHoursLifetime,wattsNow)= get_enphase_data()
-   
-   
-   # 2. insert into database
-   insert_enphase_production(curr_year,curr_month,curr_day,curr_hour,curr_min,wattHoursToday,wattHoursSevenDays,wattHoursLifetime,wattsNow)
+   # 0. retrieve error data recovery file
+   recover_data={}
+   with open('/tmp/reload_enphase.json') as f:
+      recover_data = json.load(f)
+   for RD in recover_data['data']:
+      #print(RD)
+      wattHoursToday=RD["production"]["pcu"]["wattHoursToday"]
+      wattHoursSevenDays=RD["production"]["pcu"]["wattHoursSevenDays"]
+      wattHoursLifetime=RD["production"]["pcu"]["wattHoursLifetime"]
+      wattsNow=RD["production"]["pcu"]["wattsNow"]
+      print("curr_year:%s  curr_month;%s  curr_day: %s curr_hour: %s curr_min: %s wattHoursToday %s"%(curr_year,curr_month,curr_day,curr_hour,curr_min,wattHoursToday))
+      insert_enphase_production(curr_year,curr_month,curr_day,curr_hour,curr_min,wattHoursToday,wattHoursSevenDays,wattHoursLifetime,wattsNow)
+      curr_hour=curr_hour+1
+   return;
+
 
 main()
