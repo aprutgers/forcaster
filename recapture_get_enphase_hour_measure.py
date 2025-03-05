@@ -62,6 +62,7 @@ def insert_enphase_production(year,month,day,hour,minute,wattHoursToday,wattHour
          'values (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
    mycursor.execute(sql,(year,month,day,hour,minute,wattHoursToday,wattHoursSevenDays,wattHoursLifetime,wattsNow))
    log.loginfo(str(mycursor.rowcount) + " record inserted.")
+   #log.logdebug("COMMIT DISABLED FOR TEST RUN ONLY")
    conn.commit()
    return mycursor.rowcount
    
