@@ -1,11 +1,12 @@
 import os
 import sys
 import mysql.connector
-#import datetime
 from datetime import datetime, timedelta
 import json
 import log
 import math
+# solar3p module is in another path
+sys.path.append("/home/ec2-user/solar3p/")
 import solar3p
 
 #
